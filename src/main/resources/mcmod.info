@@ -1,0 +1,16 @@
+[
+{
+  "modid": "blackout",
+  "name": "Blackout",
+  "description": "Blackout 2.0",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["chell"],
+  "credits": "086",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

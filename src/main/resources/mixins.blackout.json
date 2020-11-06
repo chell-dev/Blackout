@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "compatibilityLevel": "JAVA_8",
+  "package": "me.finz0.blackout.mixin.mixins",
+  "refmap": "mixins.blackout.refmap.json",
+  "client": [
+    "MixinPlayerControllerMP",
+    "MixinNetworkManager",
+    "MixinGuiNewChat",
+    "MixinMovementInputFromOptions",
+    "MixinGuiChat",
+    "MixinWorld"
+  ]
+}

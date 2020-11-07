@@ -116,11 +116,10 @@ public class ModuleManager {
                 m.preRender2D();
             }
         } else if(event instanceof RenderGameOverlayEvent.Post){
-            if(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR)){
+            if(event.getType().equals(RenderGameOverlayEvent.ElementType.HOTBAR))
                 for(Module m : enabledModules){
                     m.postRender2D();
                 }
-            }
         }
     }
 

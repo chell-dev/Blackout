@@ -5,21 +5,22 @@ import me.finz0.blackout.module.render.SkyColor;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldProvider;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(World.class)
 public class MixinWorld {
 
-    @Inject(method = "getSkyColor", at = @At("HEAD"), cancellable = true)
-    public void setSkyColor(Entity entityIn, float partialTicks, CallbackInfoReturnable<Vec3d> cir){
+    @Redirect(method = "getSkyColor", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/WorldProvider;getSkyColor(Lnet/minecraft/entity/Entity;F)Lnet/minecraft/util/math/Vec3d;"))
+    public Vec3d setSkyColor(WorldProvider worldProvider, Entity cameraEntity, float partialTicks){
         SkyColor mod = (SkyColor) Blackout.getInstance().moduleManager.getModuleByName("SkyColor");
 
         if(mod.isEnabled()){
-            cir.cancel();
-            cir.setReturnValue(mod.getColor());
+            return mod.getColor();
+        } else {
+            return worldProvider.getSkyColor(cameraEntity, partialTicks);
         }
     }
 

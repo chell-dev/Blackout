@@ -39,12 +39,11 @@ public class AutoCrystal extends Module {
 
     boolean isActive = false;
 
-    private Setting<Integer> tickDelay = register("TickDelay", 1, 0, 20);
-
     private Setting<Boolean> rotateS = register("Rotate", false);
 
     private Setting<Double> hitRange = register("HitRange", 6d, 0.0d, 10.0d);
     private Setting<Double> wallsRange = register("HitWallRange", 3.2d, 0.0d, 10.0d, b -> hitRange.getValue() > 0);
+    private Setting<Integer> tickDelay = register("HitDelay", 1, 0, 20);
     private Setting<Integer> hitAttempts = register("HitAttempts", 0, 0, 10, b -> hitRange.getValue() > 0);
     private Setting<HitMode> hitMode = register("HitMode", HitMode.Any, b -> hitRange.getValue() > 0);
 
@@ -53,6 +52,7 @@ public class AutoCrystal extends Module {
     }
 
     private Setting<Double> placeRange = register("PlaceRange", 5.5d, 0.0d, 10.0d);
+    private Setting<Integer> placeDelay = register("PlaceDelay", 1, 0, 20);
     //private Setting<Double> placeWallRange = register("PlaceWallRg", 3.2d, 0.0d, 10.0d, b -> placeRange.getValue() > 0);
     private Setting<Boolean> autoSwitch = register("AutoSwitch", false, b -> placeRange.getValue() > 0);
     private Setting<Boolean> noGappleSwitch = register("NoGapSwitch", true, b -> autoSwitch.getValue() && autoSwitch.isVisible());
@@ -65,6 +65,7 @@ public class AutoCrystal extends Module {
     private Setting<Integer> espAlpha = register("EspAlpha", 50, 0, 255);
 
     private int tickCounter = 0;
+    private int placeTickCounter = 0;
 
     private int attempts = 0; // hit attempts for the HitAttempts setting
     private EntityEnderCrystal lastHitCrystal = null; // for HitAttempts setting
@@ -98,18 +99,10 @@ public class AutoCrystal extends Module {
             }
         }
 
-        if(tickDelay.getValue() != 0){
-            if(tickCounter >= tickDelay.getValue()){ // check tick delay
-                tickCounter = 0;
-            } else {
-                tickCounter++;
-                return;
-            }
-        }
-
         boolean rotate = rotateS.getValue();
+        boolean shouldHit = hitRange.getValue() > 0;
 
-        if(placeRange.getValue() > 0 && !lastTickPlaced){
+        if(placeRange.getValue() > 0 && (!lastTickPlaced || !shouldHit)){
 
             if(!switchCooldown) { // if we're not switching to crystals
                 // reset variables
@@ -160,31 +153,40 @@ public class AutoCrystal extends Module {
                 }
 
                 if (offHand || mainHand) {
-                    renderPos = placePos;// set BlockPos to render esp at
-                    if (possibleTarget != null) {
-                        target = possibleTarget;
-                        lastTarget = target;
-                        KillEventHelper.INSTANCE.addTarget(target);
-                        //KdTrackerAPI.instance.addKillTarget(target);
+
+                    if(placeDelay.getValue() != 0 && placeTickCounter < placeDelay.getValue()){
+                        placeTickCounter++;
+                    } else {
+                        placeTickCounter = 0;
+
+                        renderPos = placePos;// set BlockPos to render esp at
+                        if (possibleTarget != null) {
+                            target = possibleTarget;
+                            lastTarget = target;
+                            KillEventHelper.INSTANCE.addTarget(target);
+                            //KdTrackerAPI.instance.addKillTarget(target);
+                        }
+                        isActive = true;
+                        if (rotate) rotateTo(placePos.getX() + .5, placePos.getY() - .5, placePos.getZ() + .5);
+                        Wrapper.getPlayer().connection.sendPacket(new CPacketPlayerTryUseItemOnBlock(placePos, EnumFacing.UP, offHand ? EnumHand.OFF_HAND : EnumHand.MAIN_HAND, 0, 0, 0)); // place crystal
+                        AxisAlignedBB bb = new AxisAlignedBB(placePos.up());
+                        interacted.add(bb);
+                        //Vec3d vec = new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ());
+                        //Wrapper.mc.playerController.processRightClickBlock(Wrapper.getPlayer(), Wrapper.getWorld(), placePos, EnumFacing.UP, vec, offHand ? EnumHand.OFF_HAND : EnumHand.MAIN_HAND);
+                        if (rotate) resetRotation();
+                        lastTickPlaced = true;
+                        isActive = false;
+                        return;
                     }
-                    isActive = true;
-                    if (rotate) rotateTo(placePos.getX() + .5, placePos.getY() - .5, placePos.getZ() + .5);
-                    Wrapper.getPlayer().connection.sendPacket(new CPacketPlayerTryUseItemOnBlock(placePos, EnumFacing.UP, offHand ? EnumHand.OFF_HAND : EnumHand.MAIN_HAND, 0, 0, 0)); // place crystal
-                    AxisAlignedBB bb = new AxisAlignedBB(placePos.up());
-                    interacted.add(bb);
-                    //Vec3d vec = new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ());
-                    //Wrapper.mc.playerController.processRightClickBlock(Wrapper.getPlayer(), Wrapper.getWorld(), placePos, EnumFacing.UP, vec, offHand ? EnumHand.OFF_HAND : EnumHand.MAIN_HAND);
-                    if (rotate) resetRotation();
-                    lastTickPlaced = true;
-                    isActive = false;
-                    return;
+
                 }
             }
         }
 
         lastTickPlaced = false;
 
-        if(hitRange.getValue() > 0) {
+        if(shouldHit) {
+
             Predicate<? super Entity> predicate;
 
             switch (hitMode.getValue()) {
@@ -207,7 +209,17 @@ public class AutoCrystal extends Module {
                     .filter(e -> hitAttempts.getValue() <= 0 || attempts < hitAttempts.getValue() || lastHitCrystal == null || e != lastHitCrystal) // HitAttempts check
                     .min(Comparator.comparing(e -> lastTarget == null || lastTarget.getHealth() <= 0 || lastTarget.isDead ? Wrapper.getPlayer().getDistance(e) : lastTarget.getDistance(e))).orElse(null); // get closest
 
-            if(crystal != null){ // if we found a valid crystal
+            if(crystal != null){
+
+                if(tickDelay.getValue() != 0){
+                    if(tickCounter >= tickDelay.getValue()){
+                        tickCounter = 0;
+                    } else {
+                        tickCounter++;
+                        return;
+                    }
+                }
+
                 isActive = true;
                 if(rotate) rotateTo(crystal); // rotate to the crystal
 
@@ -253,6 +265,7 @@ public class AutoCrystal extends Module {
 		// reset variables
         attempts = 0;
         tickCounter = tickDelay.getValue();
+        placeTickCounter = placeDelay.getValue();
         lastHitCrystal = null;
         placePos = null;
         renderPos = null;
@@ -273,6 +286,7 @@ public class AutoCrystal extends Module {
 		// reset variables
         attempts = 0;
         tickCounter = tickDelay.getValue();
+        placeTickCounter = placeDelay.getValue();
         lastHitCrystal = null;
         placePos = null;
         renderPos = null;
@@ -281,8 +295,8 @@ public class AutoCrystal extends Module {
         target = null;
         lastTarget = null;
         isActive = false;
-        placedCrystals = new ArrayList<>();
-        interacted = new ArrayList<>();
+        placedCrystals = null;
+        interacted = null;
 
         if(toggleMsgs.getValue())
             Command.sendClientMessage(getName() + ChatFormatting.RED + " OFF", false);

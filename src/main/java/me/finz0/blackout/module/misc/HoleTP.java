@@ -22,7 +22,7 @@ public class HoleTP extends Module {
 
     private boolean isHole(BlockPos blockPos){
         HoleESP holeESP = (HoleESP) Blackout.getInstance().moduleManager.getModuleByName("HoleESP");
-        return holeESP.isBedrock(blockPos) || holeESP.isObby(blockPos);
+        return holeESP.airCheck(blockPos) && (holeESP.isBedrock(blockPos) || holeESP.isObby(blockPos));
     }
 
     private BlockPos getPlayerPos() {

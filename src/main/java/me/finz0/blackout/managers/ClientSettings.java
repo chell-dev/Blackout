@@ -19,17 +19,17 @@ public class ClientSettings {
 
     public Color getColorr(int alpha){
         if(colors.rainbow.getValue()) return Blackout.getInstance().rainbow.getColor(alpha);
-        return new Color(colors.red.getValue(), colors.green.getValue(), colors.blue.getValue(), alpha);
+        return colors.argb.getValue().getColor();
     }
 
     public int getColor(){
         if(colors.rainbow.getValue()) return Blackout.getInstance().rainbow.getHex();
-        return new Color(colors.red.getValue(), colors.green.getValue(), colors.blue.getValue()).getRGB();
+        return colors.argb.getValue().getHex();
     }
 
     public int getColor(int alpha){
         if(colors.rainbow.getValue()) return Blackout.getInstance().rainbow.getColor(alpha).getRGB();
-        return new Color(colors.red.getValue(), colors.green.getValue(), colors.blue.getValue(), alpha).getRGB();
+        return colors.argb.getValue().getHex(alpha);
     }
 
     public String getPrefix(){

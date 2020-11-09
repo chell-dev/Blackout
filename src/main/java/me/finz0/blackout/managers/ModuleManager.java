@@ -134,7 +134,7 @@ public class ModuleManager {
     public void keyPressed(InputEvent.KeyInputEvent event){
         if(Keyboard.getEventKey() != 0){
             modules.forEach((name, m) ->{
-                if(m.getBind() == Keyboard.getEventKey()) {
+                if(m.bind.getValue().getKeyCode() == Keyboard.getEventKey()) {
                     if(m.getBindBehaviour().equals(Module.BindBehaviour.TOGGLE)){
                         if (Keyboard.getEventKeyState()) m.toggle();
                     } else {

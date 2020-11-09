@@ -35,6 +35,11 @@ public class SliderButton<T> extends SubButton {
         return setting.isVisible();
     }
 
+    @Override
+    public void guiClosed(){
+        typing = false;
+    }
+
     protected void updateSlider(int mouseX){
     }
 
@@ -78,8 +83,8 @@ public class SliderButton<T> extends SubButton {
                     dragging = true;
                     break;
                 case 1:
-                    typing = true;
-                    ClickGUI.sliderTyping = true;
+                    typing = !typing;
+                    ClickGUI.sliderTyping = typing;
                     break;
             }
     }
@@ -109,11 +114,11 @@ public class SliderButton<T> extends SubButton {
                 typing = false;
                 ClickGUI.sliderTyping = false;
                 input = "";
-                break;
+                return;
             case Keyboard.KEY_BACK:
             case Keyboard.KEY_DELETE:
                 input = StringUtils.chop(input);
-                break;
+                return;
         }
 
         if(validChars.contains(typedChar)){

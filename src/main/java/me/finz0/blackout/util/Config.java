@@ -3,6 +3,8 @@ package me.finz0.blackout.util;
 import me.finz0.blackout.Blackout;
 import me.finz0.blackout.hud.HudComponent;
 import me.finz0.blackout.module.Module;
+import me.finz0.blackout.setting.Bind;
+import me.finz0.blackout.setting.ColorValue;
 import me.finz0.blackout.setting.Setting;
 import net.minecraft.client.Minecraft;
 import org.lwjgl.input.Keyboard;
@@ -24,10 +26,15 @@ public class Config {
             try {
                 writer.write("MODULE = " + name + "\r\n");
                 writer.write("ENABLED = " + module.isEnabled() + "\r\n");
-                writer.write("BIND = " + Keyboard.getKeyName(module.getBind()) + "\r\n");
                 for (Setting setting : Blackout.getInstance().settingManager.getSettingsForMod(module)) {
                     writer.write("SETTING = " + setting.getName() + "\r\n");
-                    writer.write("SETTING VALUE = " + (setting.getValue() instanceof Color ? ((Color) setting.getValue()).getRGB() : setting.getValue()) + "\r\n");
+                    Object val = setting.getValue();
+                    if(val instanceof ColorValue)
+                        writer.write("SETTING VALUE = " + ((ColorValue) setting.getValue()).getHex() + "\r\n");
+                    else if(val instanceof Bind)
+                        writer.write("SETTING VALUE = " + ((Bind) setting.getValue()).getKeyName() + "\r\n");
+                    else
+                        writer.write("SETTING VALUE = " + setting.getValue() + "\r\n");
                 }
             } catch (IOException ignored){}
             if(module.isEnabled()) module.disable(); // call onDisable() if the module is enabled
@@ -68,9 +75,6 @@ public class Config {
                 case "ENABLED":
                     if(parsingModule != null && Boolean.parseBoolean(split[1])) parsingModule.enable();
                     break;
-                case "BIND":
-                    if(parsingModule != null) parsingModule.setBind(Keyboard.getKeyIndex(split[1]));
-                    break;
                 case "SETTING":
                     if(parsingModule != null)
                         parsingSetting = Blackout.getInstance().settingManager.getSetting(split[1], parsingModule);
@@ -106,7 +110,13 @@ public class Config {
         if(value instanceof Double) return Double.parseDouble(text);
         if(value instanceof Float) return Float.parseFloat(text);
         if(value instanceof Boolean) return Boolean.parseBoolean(text);
-        if(value instanceof Color) return new Color(Integer.parseInt(text));
+        if(value instanceof Bind) return new Bind(Keyboard.getKeyIndex(text));
+        if(value instanceof ColorValue){
+            try {
+                return new ColorValue(Integer.decode(text));
+            } catch (NumberFormatException ignored){
+            }
+        }
         if(value instanceof Enum){
             try {
                 Class<Enum> e = ((Enum)value).getDeclaringClass();

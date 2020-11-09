@@ -2,6 +2,7 @@ package me.finz0.blackout.module;
 
 import me.finz0.blackout.Blackout;
 import me.finz0.blackout.managers.ModuleManager;
+import me.finz0.blackout.setting.Bind;
 import me.finz0.blackout.setting.Setting;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -10,25 +11,25 @@ import java.util.function.Predicate;
 public abstract class Module {
     private final String name;
     private final Category category;
-    private int bind;
+    public final Setting<Bind> bind;
     private boolean enabled;
-    private Setting<BindBehaviour> bindBehaviour;
+    private final Setting<BindBehaviour> bindBehaviour;
 
     public Module(String name, Category category){
         this.name = name;
         this.category = category;
-        this.bind = 0; // 0 = none
+        this.bind = register("Bind", new Bind(0)); // 0 = none
         this.enabled = false;
         bindBehaviour = register("BindMode", BindBehaviour.TOGGLE);
         ModuleManager.register(this, name);
     }
 
-    public Module(String name, Category category, boolean enabled, BindBehaviour bindBehaviourIn){
+    public Module(String name, Category category, boolean enabled, Setting<Bind> bind, Setting<BindBehaviour> bindBehaviour){
         this.name = name;
         this.category = category;
-        this.bind = 0;
+        this.bind = bind;
         this.enabled = enabled;
-        bindBehaviour = register("BindMode", bindBehaviourIn);
+        this.bindBehaviour = bindBehaviour;
         ModuleManager.register(this, name);
     }
 
@@ -39,22 +40,10 @@ public abstract class Module {
     public Category getCategory() {
         return category;
     }
-
-    public int getBind() {
-        return bind;
-    }
 	
 	// used for array list which is not actually implemented
     public String getHudInfo(){
         return "";
-    }
-
-    /**
-     * @return new bind
-     */
-    public int setBind(int newBind){
-        bind = newBind;
-        return bind;
     }
 
     public boolean isEnabled() {

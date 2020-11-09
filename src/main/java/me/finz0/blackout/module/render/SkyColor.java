@@ -2,6 +2,7 @@ package me.finz0.blackout.module.render;
 
 import me.finz0.blackout.Blackout;
 import me.finz0.blackout.module.Module;
+import me.finz0.blackout.setting.ColorValue;
 import me.finz0.blackout.setting.Setting;
 import net.minecraft.util.math.Vec3d;
 
@@ -19,9 +20,7 @@ public class SkyColor extends Module {
 
     private final Setting<Mode> mode = register("Mode", Mode.SYNC);
 
-    private final Setting<Integer> r = register("Red", 50, 0, 255, b -> mode.getValue().equals(Mode.COLOR));
-    private final Setting<Integer> g = register("Green", 50, 0, 255, b -> mode.getValue().equals(Mode.COLOR));
-    private final Setting<Integer> b = register("Blue", 50, 0, 255, b -> mode.getValue().equals(Mode.COLOR));
+    private final Setting<ColorValue> color = register("RGB", new ColorValue(50, 50, 50), b -> mode.getValue().equals(Mode.COLOR));
 
     private final Setting<Integer> speed = register("Speed", 2, 1, 10, b -> mode.getValue().equals(Mode.RAINBOW));
 
@@ -32,7 +31,8 @@ public class SkyColor extends Module {
                 Color c = Blackout.getInstance().clientSettings.getColorr(255);
                 return new Vec3d(c.getRed() / 255f, c.getGreen() / 255f, c.getBlue() / 255f);
             case COLOR:
-                return new Vec3d(r.getValue() / 255f, g.getValue() / 255f, b.getValue() / 255f);
+                Color c1 = color.getValue().getColor();
+                return new Vec3d(c1.getRed() / 255f, c1.getGreen() / 255f, c1.getBlue() / 255f);
             case RAINBOW:
                 Color rainbow = new Color(hex);
                 return new Vec3d(rainbow.getRed() / 255f, rainbow.getGreen() / 255f, rainbow.getBlue() / 255f);

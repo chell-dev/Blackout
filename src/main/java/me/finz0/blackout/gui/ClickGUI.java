@@ -14,6 +14,7 @@ public class ClickGUI extends GuiScreen {
     private List<Panel> panels;
     public static boolean bindListening = false;
     public static boolean sliderTyping = false;
+    public static boolean colorTyping = false;
 
     public ClickGUI(){
         panels = new ArrayList<>();
@@ -58,7 +59,7 @@ public class ClickGUI extends GuiScreen {
             p.keyTyped(typedChar, keyCode);
         }
 
-        if(keyCode == 1 || (!bindListening && !sliderTyping && keyCode == Blackout.getInstance().moduleManager.getModuleByName("ClickGUI").getBind())) {
+        if(keyCode == 1 || (!bindListening && !sliderTyping && !colorTyping && keyCode == Blackout.getInstance().moduleManager.getModuleByName("ClickGUI").bind.getValue().getKeyCode())) {
             mc.displayGuiScreen(null);
 
             if (mc.currentScreen == null)
@@ -122,6 +123,7 @@ public class ClickGUI extends GuiScreen {
 
         bindListening = false;
         sliderTyping = false;
+        colorTyping = false;
         super.onGuiClosed();
     }
 

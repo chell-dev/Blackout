@@ -2,6 +2,7 @@ package me.finz0.blackout.module.gui;
 
 import me.finz0.blackout.Blackout;
 import me.finz0.blackout.module.Module;
+import me.finz0.blackout.setting.Bind;
 import me.finz0.blackout.util.Wrapper;
 import net.minecraft.client.gui.ScaledResolution;
 import org.lwjgl.input.Keyboard;
@@ -9,7 +10,7 @@ import org.lwjgl.input.Keyboard;
 public class ClickGuiModule extends Module {
     public ClickGuiModule() {
         super("ClickGUI", Category.GUI);
-        setBind(Keyboard.KEY_P);
+        bind.setValue(new Bind(Keyboard.KEY_P));
     }
 
     @Override

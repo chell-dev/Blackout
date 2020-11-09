@@ -4,11 +4,10 @@ import me.finz0.blackout.Blackout;
 import me.finz0.blackout.command.Command;
 import me.finz0.blackout.gui.IGuiComponent;
 import me.finz0.blackout.gui.Panel;
-import me.finz0.blackout.gui.button.sub.BindButton;
-import me.finz0.blackout.gui.button.sub.BooleanButton;
-import me.finz0.blackout.gui.button.sub.EnumButton;
-import me.finz0.blackout.gui.button.sub.SliderButton;
+import me.finz0.blackout.gui.button.sub.*;
 import me.finz0.blackout.module.Module;
+import me.finz0.blackout.setting.Bind;
+import me.finz0.blackout.setting.ColorValue;
 import me.finz0.blackout.util.Wrapper;
 import me.finz0.blackout.setting.Setting;
 import net.minecraft.client.gui.Gui;
@@ -51,16 +50,17 @@ public class ModuleButton implements IGuiComponent {
                 button = new SliderButton.IntSlider(s, x, y + height + subButtonY, this);
             } else if(s.getValue() instanceof Enum){
                 button = new EnumButton(s, x, y + height + subButtonY, this);
+            } else if(s.getValue() instanceof ColorValue){
+                button = new ColorButton(s, x, y + height + subButtonY, this);
+            } else if(s.getValue() instanceof Bind){
+                button = new BindButton(s, x, y + height + subButtonY, this);
             }
-            // TODO: color and enum
+
             if(button != null) {
                 buttons.add(button);
                 subButtonY += button.getHeight();
             }
         }
-        BindButton bindButton = new BindButton(x, y + height + subButtonY, this);
-        buttons.add(bindButton);
-        //subButtonY += bindButton.getHeight();
     }
 
     @Override

@@ -31,6 +31,7 @@ public class ModuleManager {
         modules = new HashMap<>();
 
 		// register modules here
+        new FakePlayer();
         new ViewModel();
         new SkyColor();
         new PullDown();

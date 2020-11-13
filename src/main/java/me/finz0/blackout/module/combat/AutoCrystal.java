@@ -60,6 +60,7 @@ public class AutoCrystal extends Module {
     private Setting<Double> facePlaceHp = register("FacePlaceHP", 8.0d, 0.0d, 20.0d, b -> placeRange.getValue() > 0);
     private Setting<Double> maxSelfDmg = register("MaxSelfDmg", 6.0d, 0.0d, 20.0d, b -> placeRange.getValue() > 0);
     private Setting<Double> enemyRange = register("EnemyRange", 10.0d, 0.0d, 20.0d, b -> placeRange.getValue() > 0);
+    private Setting<Boolean> predict = register("Resolver", false, b -> placeRange.getValue() > 0);
 
     private Setting<Boolean> toggleMsgs = register("ToggleMsgs", true);
     private Setting<Integer> espAlpha = register("EspAlpha", 50, 0, 255);
@@ -105,24 +106,33 @@ public class AutoCrystal extends Module {
         if(placeRange.getValue() > 0 && (!lastTickPlaced || !shouldHit)){
 
             if(!switchCooldown) { // if we're not switching to crystals
-                // reset variables
                 placePos = null;
                 renderPos = null;
                 possibleTarget = null;
                 target = null;
                 float dmg = 0;
                 for (EntityPlayer player : Wrapper.getWorld().playerEntities.stream()
-                        .filter(p -> !p.equals(Wrapper.getPlayer())) // ignore if its the client player
-                        .filter(p -> Wrapper.getPlayer().getDistance(p) <= enemyRange.getValue()) // ignore if too far
-                        .filter(p -> p.getHealth() > 0).filter(p -> !p.isDead) // ignore if dead
+                        .filter(p -> !p.equals(Wrapper.getPlayer()))
+                        .filter(p -> Wrapper.getPlayer().getDistance(p) <= enemyRange.getValue())
+                        .filter(p -> p.getHealth() > 0).filter(p -> !p.isDead)
                         .filter(p -> Blackout.getInstance().playerStatus.getStatus(p.getName()) != 1) // 1 = friend
-                        // sorted by distance unless there is an enemy in range
-                        // if there is an enemy it's gonna prioritise them instead of sorting by distance
                         .sorted(Comparator.comparing(p -> Blackout.getInstance().playerStatus.isEnemyInRange(enemyRange.getValue()) ? Blackout.getInstance().playerStatus.getStatus(p.getName()) : Wrapper.getPlayer().getDistance(p)))
                         .collect(Collectors.toList())) {
-                    // find best position to place at
+
                     for (BlockPos pos : findCrystalBlocks()) {
-                        float d = calculateDamage(pos, player);
+                        double addX = 0;
+                        double addZ = 0;
+
+                        if(predict.getValue()) {
+                            double x = player.motionX;
+                            double z = player.motionZ;
+                            if (x >= 0.9 || z >= 0.9) {
+                                addX += x*2;
+                                addZ += z*2;
+                            }
+                        }
+                        float d = calculateDamage(pos, player, addX, addZ);
+
                         if (d <= dmg || (d < minDmg.getValue() && player.getHealth() + player.getAbsorptionAmount() > facePlaceHp.getValue()) || calculateDamage(pos, Wrapper.getPlayer()) > maxSelfDmg.getValue())
                             continue;
 
@@ -404,11 +414,11 @@ public class AutoCrystal extends Module {
         return circleblocks;
     }
 
-    private float calculateDamage(double posX, double posY, double posZ, Entity entity) {
+    private float calculateDamage(double posX, double posY, double posZ, Entity entity, double addX, double addZ) {
         float doubleExplosionSize = 12.0F;
-        double distancedsize = entity.getDistance(posX, posY, posZ) / (double) doubleExplosionSize;
+        double distancedsize = getDistance(entity.posX + addX, entity.posY, entity.posZ + addZ, posX, posY, posZ) / (double) doubleExplosionSize;
         Vec3d vec3d = new Vec3d(posX, posY, posZ);
-        double blockDensity = (double) entity.world.getBlockDensity(vec3d, entity.getEntityBoundingBox());
+        double blockDensity = entity.world.getBlockDensity(vec3d, entity.getEntityBoundingBox());
         double v = (1.0D - distancedsize) * blockDensity;
         float damage = (float) ((int) ((v * v + v) / 2.0D * 7.0D * (double) doubleExplosionSize + 1.0D));
         double finald = 1.0D;
@@ -418,6 +428,13 @@ public class AutoCrystal extends Module {
             finald = getBlastReduction((EntityLivingBase) entity, getDamageMultiplied(damage), new Explosion(Wrapper.getWorld(), null, posX, posY, posZ, 6F, false, true));
         }
         return (float) finald;
+    }
+    
+    private double getDistance(double x, double y, double z, double x2, double y2, double z2){
+        double d0 = x - x2;
+        double d1 = y - y2;
+        double d2 = z - z2;
+        return MathHelper.sqrt(d0 * d0 + d1 * d1 + d2 * d2);
     }
 
     private float getBlastReduction(EntityLivingBase entity, float damage, Explosion explosion) {
@@ -451,6 +468,10 @@ public class AutoCrystal extends Module {
     //}
 
     private float calculateDamage(BlockPos blockPos, Entity entity){
-        return calculateDamage(blockPos.getX() + .5, blockPos.getY() + 1, blockPos.getZ() + .5, entity);
+        return calculateDamage(blockPos.getX() + .5, blockPos.getY() + 1, blockPos.getZ() + .5, entity, 0, 0);
+    }
+
+    private float calculateDamage(BlockPos blockPos, Entity entity, double addX, double addZ){
+        return calculateDamage(blockPos.getX() + .5, blockPos.getY() + 1, blockPos.getZ() + .5, entity, addX, addZ);
     }
 }

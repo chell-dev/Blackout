@@ -2,6 +2,7 @@ package me.finz0.blackout.managers;
 
 import me.finz0.blackout.event.PacketSendEvent;
 import me.finz0.blackout.util.Wrapper;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.play.client.CPacketPlayer;
 import net.minecraftforge.common.MinecraftForge;
@@ -48,7 +49,7 @@ public class RotationManager {
     /**
      * @author 086
      */
-    private Double[] calculateLookAt(double px, double py, double pz, EntityPlayer me) {
+    public Double[] calculateLookAt(double px, double py, double pz, Entity me) {
         double dirx = me.posX - px;
         double diry = me.posY - py;
         double dirz = me.posZ - pz;

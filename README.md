@@ -1,3 +1,2 @@
 # Blackout
-block game cheat
-wtf finzo doxxed my github - novola
+old block game cheat for 1.12.2
